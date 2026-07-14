@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>IoT Management</title>
+<style>
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+#box-temperature {
+  width: 60vw;
+  height: 40vh;
+  padding: 0;
+  background-color: #fafafa;
+  border: 2px solid #f2f2f2;
+  border-radius: 25px;
+  margin-top: 15vh;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+#box-text {
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  margin-top: clamp(2vh, 5vw, 7vh);
+  margin-left: clamp(2vw, 5vw, 10vw);
+}
+
+#temperature {
+  font-size: clamp(2rem, 10vh, 3.5rem);
+  font-weight: bold;
+  margin-left: clamp(2vw, 5vw, 10vw);
+}
+
+#log-in-button {
+  width: 190px;
+  height: 70px;
+  padding: 0;
+  background-color: #df830b;
+  border: 2px solid #fda117;
+  border-radius: 10px;
+  margin-top: 2vh;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  align-items: center;
+  font-size: 1.3em;
+  color:#fafafac2;
+}
+
+#log-in-button:hover {
+  background-color: #646360;
+  border: 2px solid #777571;
+  color: #fda117;
+}
+
+</style>
+</head>
+
+<body>
+    <div id="box-temperature">
+        <p id="box-text">Sensor Temperature:</p>
+        <p id="temperature">--°C</p>
+    </div>
+    <button id="log-in-button" type="button" onclick="window.location.href='/login'">
+        <!--<img src="https://cdn-icons-png.magnific.com/512/152/152532.png" style="width:15%;">-->
+        <a style="margin-left: 10px;">Log in</a>
+    </button>
+    <div>
+        <p style="text-align: center;">Don't have an account? <a type="button" style="color: #fda117" onclick="window.location.href='/sign-up'">Create one now</a></p>
+        <p style="text-align: center;" onclick="alert('Unavailble feature')">Forgot your password? <a style="color: #fda117">Reset it</a></p>
+    </div>
+</body>
+</html>
+<script>
+    function updateTemperature() {
+        fetch('/sensor-data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('temperature').innerHTML = data.temperature + '°C';
+            });
+    }
+    updateTemperature();   
+    setInterval(updateTemperature, 1000);
+</script>

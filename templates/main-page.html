@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Main Page</title>
+<style>
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-family: Inter, Arial, sans-serif;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 32px;
+	margin: 0;
+
+	background-color: #f3f4f9;
+	position: relative;
+	z-index: 1;
+}
+
+body::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 50vh;
+	background: #1b1f9a;
+	z-index: -1;
+}
+
+/* Stilul general al barei de navigație */
+.navbar {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	width: min(1100px, 100%); /* Aceeași lățime ca și overview-containerul alb pentru a se alinia perfect */
+	padding: 20px 0;
+	margin-bottom: 20px;     /* Împinge dashboard-ul alb puțin mai jos */
+}
+
+.nav-logo {
+	color: #ffffff;
+	font-weight: bold;
+	font-size: 1.7rem;
+}
+
+/* Link-urile din mijloc */
+.nav-links a {
+	color: rgba(255, 255, 255, 0.7); /* Text ușor transparent ca în model */
+	text-decoration: none;
+	text-align: left;
+	margin-right: auto;
+	margin-left: 50px;
+	font-size: 1rem;
+	font-weight: bold;
+	transition: color 0.3s;
+}
+
+.nav-links a.active, .nav-links a:hover {
+	color: #ffffff;     
+	font-weight: 500;
+}
+
+.nav-profile {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 15px;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: #0f1123;
+    color: white;
+    border-left: 5px solid #f8b500; /* Galben implicit pentru Warning */
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 300px;
+    max-width: 400px;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease-out forwards;
+    transition: opacity 0.5s ease;
+}
+
+/* Stil diferit dacă e de tip CRITICAL */
+.toast.critical {
+    border-left-color: #fc375d; /* Roșu aprins */
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-left: 15px;
+}
+
+.toast-close:hover {
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-icon {
+	color: #ffffff;
+	cursor: pointer;
+	width: 24px;
+	height: 24px;
+}
+
+.profile-avatar {
+	width: 35px;
+	height: 35px;
+	background-color: #e0e0e0;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.profile-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Când punem mouse-ul pe wrapper, afișăm meniul */
+.profile-wrapper:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+
+  top: 100%;
+  right: 0;
+  margin-top:2px;
+
+  background-color: #f3f4f9;
+  min-width: 140px;
+  box-shadow: 0px 10px 25px 0px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  
+  z-index: 1000;
+
+  transition: opacity 1s ease, visibility 1s ease;
+  transition-delay: 2s;
+}
+
+.dropdown-content a {
+  color: #333333;
+  padding: 10px 20px;
+  display: block;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.dropdown-content a:hover {
+  background-color: rgba(195, 194, 194, 0.826);
+}
+
+.profile-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.welcome-text {
+	width: min(1100px, 100%);
+	text-align: left;
+	color: white;
+	margin-bottom: 20px;
+}
+
+.overview-container {
+	background: linear-gradient(90deg, #274079, #26356c 25%, #262b62 50%, #272053 75%, #0b0d1b 100%);
+	color: #ffffff;
+	border-radius: 20px;
+	box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+	width: min(1100px, 100%);
+	overflow: hidden;
+	display: grid;
+	grid-template-columns: 1.2fr 1fr;
+	min-height: 500px;
+
+	align-items: center;
+	justify-content: center;
+	padding: 40px;
+
+	font-family: sans-serif;
+}
+
+.history-container {
+	background: linear-gradient(90deg, #274079, #26356c 25%, #262b62 50%, #272053 75%, #0b0d1b 100%);
+	color: #ffffff;
+	border-radius: 20px;
+	box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+	width: min(1100px, 100%);
+	overflow: hidden;
+	display: none;
+	grid-template-columns: 0.7fr 1.5fr;
+	min-height: 500px;
+
+	align-items: center;
+	justify-content: center;
+	padding: 40px;
+
+	font-family: sans-serif;
+}
+
+#box {
+  width: min(60vw, 90%);
+  height: auto;
+  min-height: 280px;
+  padding: 0;
+  background-color: #0f1123;
+  border: 2px solid #3c3c3ff3;
+  border-radius: 25px;
+  box-shadow: 0 4px 20px 0 rgba(124, 124, 124, 0), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  box-sizing: border-box;
+}
+
+#box-text {
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  margin-top: clamp(2vh, 5vw, 7vh);
+  margin-left: clamp(2vw, 5vw, 10vw);
+}
+
+.circle-wrap {
+  position: relative;
+  width: min(35vw, 220px); 
+  height: min(35vw, 220px);
+  margin: 0 auto 28px;
+}
+
+.svg-container {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.ring {
+  fill: none;
+  stroke-linecap: butt; /* Schimbat aici: capetele arcurilor sunt acum perfect drepte */
+}
+
+.ring-outer {
+  stroke: url(#gradient-mare);
+  stroke-width: 14px;
+  stroke-dasharray: 510 118; 
+}
+
+.ring-inner {
+  stroke: url(#gradient-mic);
+  stroke-width: 8px;
+  stroke-dasharray: 360 142;
+  transform-origin: 125px 125px;
+  transform: rotate(-220deg);
+}
+
+.circle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 62%; 
+  height: 62%;
+  background-color: #0f1123;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.5);
+}
+
+
+#temperature {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: bold;
+}
+
+.date-picker-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+}
+
+.date-button-wrapper {
+  position: relative;
+  background-color: #f8b500; /* Culoarea galben-muștar aprins */
+  padding: 12px 24px;
+  border-radius: 30px; /* Colțuri perfect rotunjite ca în poză */
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  box-shadow: 0 4px 15px rgba(248, 181, 0, 0.2);
+  transition: transform 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.date-button-wrapper:hover {
+  background-color: #e0a300; /* Se închide puțin la culoare când pui mouse-ul */
+  transform: translateY(-2px);
+}
+
+.date-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(15, 17, 35, 0.6); /* Text închis la culoare, ușor transparent pentru contrast */
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.date-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #0f1123; /* Culoarea textului datei */
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Truc pentru a schimba culoarea iconiței de calendar native în browsere */
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.1); /* O face mai închisă la culoare ca să se asorteze cu textul */
+  cursor: pointer;
+}
+
+#chart-box {
+  width: min(60vw, 90%);
+  min-height: 300px;
+  padding: 24px;
+  background-color: #0f1123;
+  border: 2px solid #3c3c3ff3;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(124, 124, 124, 0);
+  position: relative;
+}
+
+.scrollbar-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 14px;
+	}
+	.scrollbar-row button {
+		background: rgba(255,255,255,0.08);
+		border: none;
+		color: #b8c2ff;
+		width: 30px;
+		height: 30px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 14px;
+	}
+	.scrollbar-row button:hover {
+		background: rgba(255,255,255,0.16);
+	}
+	input[type="range"] {
+		flex: 1;
+		-webkit-appearance: none;
+		height: 6px;
+		border-radius: 3px;
+		background: rgba(255,255,255,0.1);
+		outline: none;
+	}
+	input[type="range"]::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: linear-gradient(180deg, #ff7400, #bd2cff);
+		cursor: pointer;
+		border: 2px solid #fff;
+	}
+
+@media (max-width: 960px) {
+	  .overview-container {
+		grid-template-columns: 1fr;
+		justify-items: center;
+	  }
+	  #box { 
+		margin-bottom: 24px;
+		width: 90%; 
+		height: auto;
+		padding: 20px 0;
+	  } 
+	  #chart-box {
+		min-height: 320px;
+		width: 90%; 
+		margin-top: 0; 
+	  }
+}
+@media (max-width: 960px) {
+	#history-section {
+		grid-template-columns: 1fr;
+		justify-items: center;
+	}
+	.date-picker-container { 
+		margin-bottom: 24px;
+		width: 90%; 
+		height: auto;
+		padding: 20px 0;
+		flex-direction: row;
+		justify-content: center;
+	} 
+	#chart-box {
+		min-height: 320px;
+		width: 90%; 
+		margin-top: 0; 
+	}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+</head>
+
+<body>
+	<nav class="navbar">
+		<div class="nav-logo">Io<span style="color: #f8d408;">T</span> Manager</div>
+		<div class="nav-links">
+			<a id="overview-link" class="active">Overview</a>
+			<a id="history-link">History</a>
+		</div>
+		<div class="nav-profile">
+			<div id="toast-container" class="toast-container"></div>
+			<img class="notification-icon" src="{{ url_for('static', filename='bell.png') }}" onclick="toggleNotifications()">
+			<div class="profile-wrapper">
+				<div class="profile-avatar"> 
+					<img src="{{ url_for('static', filename='avatar-icon.png') }}" alt="Profile">
+				</div>
+				<div class="dropdown-content">
+					<a>Profile</a>
+					<a onclick="window.location.href='/logout'">Logout</a>
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	<div class="welcome-text">
+		<p id="greeting" style="font-weight: bold; font-size: 1.7rem;">Good Morning</p>
+		<p style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.7);">Here's what's happening with your sensors</p>
+	</div>
+
+	<main id="overview-section" class="overview-container">
+	<div class="box" id="box">
+		<p id="box-text">Sensor Temperature:</p>
+		<div class="circle-wrap">
+	 		<svg viewBox="0 0 250 250" class="svg-container">
+				<defs>
+		  			<linearGradient id="gradient-mare" x1="0%" y1="100%" x2="100%" y2="0%">
+						<stop offset="0%" stop-color="#ff7a18" />
+						<stop offset="25%" stop-color="#f45357" />
+						<stop offset="50%" stop-color="#ba2084" />
+						<stop offset="75%" stop-color="#a01895" />
+						<stop offset="100%" stop-color="#fc375d" />
+		  			</linearGradient>
+		  
+		  			<linearGradient id="gradient-mic" x1="0%" y1="100%" x2="100%" y2="0%">
+						<stop offset="0%" stop-color="#e41885" />
+						<stop offset="25%" stop-color="#b921b9" />
+						<stop offset="50%" stop-color="#8f27ec" />
+						<stop offset="75%" stop-color="#9225ee" />
+						<stop offset="100%" stop-color="#b121bd" />
+		  			</linearGradient>
+				</defs>
+
+				<circle class="ring ring-outer" cx="125" cy="125" r="100" />
+				<circle class="ring ring-inner" cx="125" cy="125" r="80" />
+	  		</svg>
+
+	  		<div class="circle-center">
+				<div>
+		  			<p id="temperature">--°C</p>
+				</div>
+	  		</div>
+		</div>
+
+	</div>
+	<div class="chart-box" id="chart-box">
+		<canvas id="OverviewGraphic"></canvas>
+	</div>
+	</main>
+	<main id="history-section" class="history-container">
+		<form class="date-picker-container">
+			<div class="date-button-wrapper">
+    			<span class="date-label">Start Date</span>
+    			<input type="datetime-local" class="date-input" name="start_date" onchange="updateHistory()">
+  			</div>
+  
+  			<div class="date-button-wrapper">
+    			<span class="date-label">End Date</span>
+    			<input type="datetime-local" class="date-input" name="end_date" onchange="updateHistory()">
+  			</div>
+		</form>
+		<div class="chart-box" id="chart-box">
+			<div>
+			<canvas id="HistoryGraphic"></canvas>
+			</div>
+			<div class="scrollbar-row">
+				<button id="btnLeft">‹</button>
+				<input type="range" id="scrollBar" min="0" max="100" value="0" step="1">
+				<button id="btnRight">›</button>
+			</div>
+		</div>
+			
+	</main>
+</body>
+</html>
+<script>
+	window.addEventListener('pageshow', function (event) {
+		if (event.persisted) {
+			// Dacă utilizatorul a dat "Back", forțăm reîncărcarea paginii de la server
+			window.location.reload();
+		}
+	});
+	
+	window.addEventListener('load', function() {
+		const overviewSection = document.getElementById('overview-section');
+    	const historySection = document.getElementById('history-section');
+
+		const overviewLink = document.getElementById('overview-link');
+		const historyLink = document.getElementById('history-link');
+		
+		overviewLink.addEventListener('click', function() {
+    		overviewSection.style.display = 'grid';
+    		historySection.style.display = 'none';
+    
+    		overviewLink.classList.add('active');
+    		historyLink.classList.remove('active');
+		});
+
+		historyLink.addEventListener('click', function() {
+   			overviewSection.style.display = 'none';
+    		historySection.style.display = 'grid';
+    
+    		historyLink.classList.add('active');
+    		overviewLink.classList.remove('active');
+		});
+	});
+
+	const OverviewGraphic = document.getElementById('OverviewGraphic').getContext('2d');
+	const gradient = OverviewGraphic.createLinearGradient(0, 0, 0, 360);
+	gradient.addColorStop(0, 'rgba(255, 116, 0, 0.45)');
+	gradient.addColorStop(0.5, 'rgba(189, 44, 255, 0.16)');
+	gradient.addColorStop(1, 'rgba(61, 50, 158, 0)');
+
+	const graphicTemp = new Chart(OverviewGraphic, {
+		type: 'line',
+		data: {
+			labels: [],
+			datasets: [{
+				label: 'temperature',
+				data: [],
+				borderColor: '#ff6f7f',
+				backgroundColor: gradient,
+				fill: true,
+				tension: 0.32,
+				borderWidth: 3,
+				pointRadius: 4,
+				pointBackgroundColor: '#fdbb4f',
+				pointBorderColor: '#ffffff',
+				pointHoverRadius: 6,
+				pointHoverBackgroundColor: '#ffffff',
+				pointHoverBorderColor: '#ff6f7f',
+				cubicInterpolationMode: 'monotone'
+			}]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: { display: false }
+			},
+			scales: {
+				x: {
+					grid: {
+						color: 'rgba(255,255,255,0.08)',
+						drawBorder: false
+					},
+					ticks: {
+						color: '#b8c2ff',
+						font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+					}
+				},
+				y: {
+					beginAtZero: false,
+					grid: {
+						color: 'rgba(255,255,255,0.08)',
+						borderDash: [4, 4],
+						drawBorder: false
+					},
+					ticks: {
+						color: '#b8c2ff',
+						font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+					}
+				}
+			},
+			layout: {
+				padding: {
+					top: 10,
+					right: 10,
+					bottom: 10,
+					left: 10
+				}
+			}
+		}
+	});
+
+// ---------- limite axa valori (Y) ----------
+	const Y_DEFAULT_MIN = 5;
+	const Y_DEFAULT_MAX = 35;
+	const Y_ABSOLUTE_MIN = -20;
+	const Y_ABSOLUTE_MAX = 80;
+	const Y_PADDING = 5;
+
+	function computeYRange(data) {
+		const dataMin = Math.min(...data);
+		const dataMax = Math.max(...data);
+
+		let yMin = Math.min(Y_DEFAULT_MIN, dataMin - Y_PADDING);
+		let yMax = Math.max(Y_DEFAULT_MAX, dataMax + Y_PADDING);
+
+		yMin = Math.max(yMin, Y_ABSOLUTE_MIN);
+		yMax = Math.min(yMax, Y_ABSOLUTE_MAX);
+
+		return { yMin, yMax };
+	}
+
+// ---------- gradient bare ----------
+	const ctx = document.getElementById('HistoryGraphic').getContext('2d');
+	const history_gradient = ctx.createLinearGradient(0, 0, 0, 320);
+	history_gradient.addColorStop(0, 'rgba(255, 116, 0, 0.85)');
+	history_gradient.addColorStop(0.5, 'rgba(189, 44, 255, 0.55)');
+	history_gradient.addColorStop(1, 'rgba(61, 50, 158, 0.15)');
+
+	const gradientHover = ctx.createLinearGradient(0, 0, 0, 320);
+	gradientHover.addColorStop(0, 'rgba(255, 116, 0, 1)');
+	gradientHover.addColorStop(1, 'rgba(189, 44, 255, 0.7)');
+
+	const yMin = 5;
+	const yMax = 35;
+
+// numarul de bare vizibile initial
+	const WINDOW_SIZE = 15;
+
+	const graphicHistory = new Chart(ctx, {
+		type: 'bar',
+		data: {
+			labels: [],
+			datasets: [{
+				label: 'temperatura',
+				data: [],
+				backgroundColor: history_gradient,
+				hoverBackgroundColor: gradientHover,
+				borderRadius: 6,
+				borderSkipped: false,
+				barPercentage: 0.7,
+				categoryPercentage: 0.8
+			}]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			animation: { duration: 500, easing: 'easeOutQuart' },
+			plugins: {
+				legend: { display: false },
+				tooltip: {
+        callbacks: {
+            title: function(context) {
+                // context[0].dataIndex ne spune exact pe a câta bară s-a pus mouse-ul
+                const index = context[0].dataIndex;
+                
+                // Luăm string-ul ISO original pe care l-am salvat la pasul anterior
+                const rawDate = graphicHistory.rawTimestamps ? graphicHistory.rawTimestamps[index] : null;
+                
+                if (rawDate) {
+                    const dateObj = new Date(rawDate);
+                    // Returnează data completă în format românesc: ex. "13.07.2026, 11:28:00"
+                    return dateObj.toLocaleString('en-US', {
+                        weekday: 'long',
+						day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+                // Dacă nu găsește data completă din vreun motiv, lasă eticheta default de pe axa X
+                return context[0].label; 
+            }
+        }
+    },
+				zoom: {
+					zoom: {
+						wheel: { enabled: true },
+						pinch: { enabled: true },
+						mode: 'x',
+						onZoomComplete: syncScrollbarFromChart
+					},
+					pan: {
+						enabled: true,
+						mode: 'x',
+						onPanComplete: syncScrollbarFromChart
+					},
+					limits: {
+						x: { min: 0, max: 100, minRange: 5 }
+					}
+				}
+			},
+			scales: {
+				x: {
+					min: 0,
+					max: 10,
+					grid: {
+						color: 'rgba(255,255,255,0.08)',
+						drawBorder: false
+					},
+					ticks: {
+						color: '#b8c2ff',
+						font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+					}
+				},
+				y: {
+					min: 5,
+					max: 35,
+					grid: {
+						color: 'rgba(255,255,255,0.08)',
+						borderDash: [4, 4],
+						drawBorder: false
+					},
+					ticks: {
+						color: '#b8c2ff',
+						font: { family: 'Inter, system-ui, sans-serif', size: 12 }
+					}
+				}
+			},
+			layout: {
+				padding: { top: 10, right: 10, bottom: 10, left: 10 }
+			}
+		}
+	});
+
+// ---------- actualizare grafic (ex: date noi) ----------
+	function updateChartData(newData, newLabels) {
+		graphicHistory.data.labels = newLabels;
+		graphicHistory.data.datasets[0].data = newData;
+
+		const { yMin, yMax } = computeYRange(newData);
+		graphicHistory.options.scales.y.min = yMin;
+		graphicHistory.options.scales.y.max = yMax;
+
+		graphicHistory.options.plugins.zoom.limits.x.max = newLabels.length - 1;
+		graphicHistory.update();
+	}
+
+// ---------- bara de navigare (scrollbar) ----------
+	const scrollBar = document.getElementById('scrollBar');
+	const btnLeft = document.getElementById('btnLeft');
+	const btnRight = document.getElementById('btnRight');
+
+	function totalPoints() {
+		return graphicHistory.data.labels.length;
+	}
+
+	function currentWindowSize() {
+		const xs = graphicHistory.scales.x;
+		return Math.max(1, Math.round(xs.max - xs.min));
+	}
+
+	function setWindowStart(startIndex) {
+		const size = currentWindowSize();
+		const maxStart = Math.max(0, totalPoints() - 1 - size);
+		startIndex = Math.min(Math.max(0, startIndex), maxStart);
+
+		graphicHistory.options.scales.x.min = startIndex;
+		graphicHistory.options.scales.x.max = startIndex + size;
+		graphicHistory.update('none');
+
+		scrollBar.value = maxStart === 0 ? 0 : Math.round((startIndex / maxStart) * 100);
+	}
+
+	function syncScrollbarFromChart() {
+		const xs = graphicHistory.scales.x;
+		const size = Math.max(1, xs.max - xs.min);
+		const maxStart = Math.max(0, totalPoints() - 1 - size);
+		scrollBar.value = maxStart === 0 ? 0 : Math.round((xs.min / maxStart) * 100);
+	}
+
+	scrollBar.addEventListener('input', () => {
+		const size = currentWindowSize();
+		const maxStart = Math.max(0, totalPoints() - 1 - size);
+		const startIndex = Math.round((scrollBar.value / 100) * maxStart);
+		graphicHistory.options.scales.x.min = startIndex;
+		graphicHistory.options.scales.x.max = startIndex + size;
+		graphicHistory.update('none');
+	});
+
+	btnLeft.addEventListener('click', () => {
+		const xs = graphicHistory.scales.x;
+		const size = Math.max(1, xs.max - xs.min);
+		setWindowStart(Math.round(xs.min) - Math.ceil(size / 2));
+	});
+
+	btnRight.addEventListener('click', () => {
+		const xs = graphicHistory.scales.x;
+		const size = Math.max(1, xs.max - xs.min);
+		setWindowStart(Math.round(xs.min) + Math.ceil(size / 2));
+	});
+
+	function updateTemperature() {
+		fetch('/sensor-data')
+			.then(response => response.json())
+			.then(data => {
+				document.getElementById('temperature').innerHTML = data.temperature + '°C';
+				const currentTime = new Date().toLocaleString([], { hour: '2-digit', minute: '2-digit' });
+				graphicTemp.data.labels.push(currentTime);
+				graphicTemp.data.datasets[0].data.push(data.temperature);
+				if (graphicTemp.data.labels.length > 15) {
+					graphicTemp.data.labels.shift();
+					graphicTemp.data.datasets[0].data.shift();
+				}
+				graphicTemp.update();
+			});
+	}
+	
+	updateTemperature();
+	setInterval(updateTemperature, 1000);
+
+	// Set global pentru a urmări ce alarme am afișat deja ca pop-up
+const activeToastIds = new Set();
+
+function showToast(id, message, severity) {
+    // Dacă am arătat deja acest popup, nu îl mai generăm o dată
+    if (activeToastIds.has(id)) return;
+    activeToastIds.add(id);
+
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${severity.toLowerCase()}`; // Adaugă clasa 'warning' sau 'critical'
+    
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button class="toast-close" onclick="closeToast(this, ${id})">×</button>
+    `;
+    
+    container.appendChild(toast);
+
+    // Auto-dispare după 10 secunde (10000 ms)
+    setTimeout(() => {
+        removeToastElement(toast);
+    }, 10000);
+}
+
+function closeToast(button, id) {
+    const toast = button.parentElement;
+    removeToastElement(toast);
+}
+
+function removeToastElement(toast) {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 500); // Așteaptă tranziția de fade-out din CSS
+}
+
+// Actualizează funcția ta checkNotifications din script:
+function checkNotifications() {
+    fetch('/get-notifications')
+        .then(response => response.json())
+        .then(data => {
+            const bellImg = document.getElementById('notification-bell');
+            const listContainer = document.getElementById('notification-list');
+            
+            if (data.length > 0) {
+                bellImg.src = bellActive;
+                listContainer.innerHTML = '';
+                
+                data.forEach(item => {
+                    // 1. Injectăm în meniul dropdown al clopoțelului
+                    listContainer.innerHTML += `<div class="notification-item">${item.message}</div>`;
+                    
+                    // 2. Declanșăm popup-ul de 10 secunde pe ecran
+                    showToast(item.id, item.message, item.severity || 'warning');
+                });
+            } else {
+                if (!document.getElementById('notification-dropdown').classList.contains('show')) {
+                    bellImg.src = bellNormal;
+                }
+                listContainer.innerHTML = '<div class="no-notifications">Nu ai notificări noi</div>';
+            }
+        });
+	}
+	function toggleNotifications() {
+    const dropdown = document.getElementById('notification-dropdown');
+    const bellImg = document.getElementById('notification-bell');
+    
+    // 1. Deschide sau închide vizual meniul dropdown (adaugă/șterge clasa 'show')
+    dropdown.classList.toggle('show');
+    
+    // 2. Dacă utilizatorul a deschis meniul, înseamnă că citește alarmele active
+    if (dropdown.classList.contains('show')) {
+        // Schimbăm instant iconița înapoi la cea normală (galbenă/albă)
+        if (typeof bellNormal !== 'undefined') {
+            bellImg.src = bellNormal;
+        }
+        
+        // 3. Trimitem semnalul către serverul Flask să le marcheze ca citite (ACKNOWLEDGED)
+        fetch('/read-notifications', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Alarmele active au fost luate la cunoștință:", data);
+            })
+            .catch(err => console.error("Eroare la trimiterea confirmării:", err));
+    }
+}
+	
+	function updateHistory() {
+		const start_date = document.querySelector('input[name="start_date"]').value;
+		const end_date = document.querySelector('input[name="end_date"]').value;
+
+		if (start_date && end_date) {
+			fetch('/history-data?start_date=' + start_date + '&end_date=' + end_date)
+				.then(response => response.json())
+				.then(data => {
+					graphicHistory.data.labels = data.labels.map(utcString => {
+                    // Creăm un obiect de dată stabil. Adăugăm "Z" la final dacă serverul nu îl trimite,
+                    // pentru a-i spune explicit browserului că textul primit este în format UTC.
+                    	const dateObj = new Date(utcString.includes('Z') ? utcString : utcString + 'Z');
+                    
+                    // Returnăm doar ora și minutul conform setărilor locale ale sistemului
+                    	return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                	});
+
+                // Injectăm noile etichete convertite și datele în graficul de istoric
+					graphicHistory.rawTimestamps = data.labels;
+					graphicHistory.data.datasets[0].data = data.temperatures;
+					graphicHistory.update();
+				});
+		}
+		else{
+			return;
+		}
+	}
+
+	function updateGreeting() {
+		const hour = new Date().getHours();
+		let greeting = '';
+		if (hour < 12) {
+			greeting = 'Good Morning';
+		} else if (hour < 18) {
+			greeting = 'Good Afternoon';
+		} else {
+			greeting = 'Good Evening';
+		}
+		document.getElementById('greeting').innerHTML = greeting;
+	}
+	
+	updateGreeting();
+</script>
