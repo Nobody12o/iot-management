@@ -145,7 +145,7 @@ def data_colect():
     new_temp = data["ds1"] # get information from sensor
     new_temp = (float(new_temp)) / 10 # convert to Celsius
 
-    proceseaza_temperatura_live(new_temp)
+    check_for_anomalies(new_temp)
 
     if count == 1:
         count = DEFAULT_INTERVAL
@@ -175,7 +175,7 @@ def data_colect():
 
     return jsonify({"temperature": new_temp})
 
-def proceseaza_temperatura_live(valoare_temperatura):
+def check_for_anomalies(valoare_temperatura):
     # Determină severitatea în funcție de pragurile stabilite
     severitate_curenta = None
     mesaj_alarma = ""
@@ -262,7 +262,7 @@ def read_notifications():
         query = """
             UPDATE ALARMS 
             SET status = 'ACKNOWLEDGED', 
-                acknowledged_by = 'Temperature Sensor', 
+                acknowledged_by = 'Paun', 
                 acknowledged_at = NOW() 
             WHERE status = 'ACTIVE'
         """

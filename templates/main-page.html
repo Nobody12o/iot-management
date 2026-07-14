@@ -133,11 +133,74 @@ body::before {
     }
 }
 
-.notification-icon {
+.notification-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-bell {
 	color: #ffffff;
 	cursor: pointer;
 	width: 24px;
 	height: 24px;
+}
+
+/* 1. Dropdown-ul principal care conține notificările */
+.notification-dropdown {
+    display: none; /* Ascuns implicit, apare doar când dai click pe clopoțel */
+    position: absolute;
+    top: 100%; /* Ajustează valoarea asta ca să se așeze frumos sub clopoțelul tău */
+    right: 0;
+    background-color: #0f1123; /* Fundalul închis asortat cu tema ta */
+    border: 1px solid #3c3c3f;
+    min-width: 280px;
+    max-height: 350px;
+    overflow-y: auto; /* Adaugă scrollbar dacă sunt prea multe notificări */
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    z-index: 1000;
+}
+
+/* Clasa pe care o adaugă JavaScript-ul pentru a afișa meniul */
+.notification-dropdown.show {
+    display: block;
+}
+
+/* 2. Antetul meniului de notificări */
+.notification-header {
+    padding: 12px 15px;
+    font-weight: bold;
+    border-bottom: 1px solid #3c3c3f;
+    font-size: 0.9rem;
+    color: #f8d408; /* Galbenul din tema ta */
+    letter-spacing: 0.5px;
+}
+
+/* 3. Containerul în care JavaScript va injecta mesajele */
+.notification-list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 4. Stilul pentru fiecare mesaj/notificare în parte */
+.notification-item {
+    padding: 12px 15px;
+    font-size: 0.85rem;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    line-height: 1.4;
+}
+
+.notification-item:last-child {
+    border-bottom: none; /* Scoatem dunga de jos de la ultimul element */
+}
+
+/* 5. Stilul afișat când nu există nicio alarmă activă */
+.no-notifications {
+    padding: 20px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
 }
 
 .profile-avatar {
@@ -468,8 +531,15 @@ body::before {
 			<a id="history-link">History</a>
 		</div>
 		<div class="nav-profile">
+			<div class="notification-wrapper">
 			<div id="toast-container" class="toast-container"></div>
-			<img class="notification-icon" src="{{ url_for('static', filename='bell.png') }}" onclick="toggleNotifications()">
+			<img id="notification-bell" class="notification-bell" src="{{ url_for('static', filename='bell.png') }}" onclick="toggleNotifications()">
+			<div class="notification-dropdown" id="notification-dropdown">
+				<div class="notification-header">Notificări</div>
+				<div id="notification-list">
+				</div>
+			</div>
+		</div>
 			<div class="profile-wrapper">
 				<div class="profile-avatar"> 
 					<img src="{{ url_for('static', filename='avatar-icon.png') }}" alt="Profile">
@@ -874,94 +944,102 @@ body::before {
 	setInterval(updateTemperature, 1000);
 
 	// Set global pentru a urmări ce alarme am afișat deja ca pop-up
-const activeToastIds = new Set();
+	const bellNormal = "{{ url_for('static', filename='bell.png') }}";
+const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
+	const activeToastIds = new Set();
 
-function showToast(id, message, severity) {
+	function showToast(id, message, severity) {
     // Dacă am arătat deja acest popup, nu îl mai generăm o dată
-    if (activeToastIds.has(id)) return;
-    activeToastIds.add(id);
+    	if (activeToastIds.has(id)) return;
+    	activeToastIds.add(id);
 
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${severity.toLowerCase()}`; // Adaugă clasa 'warning' sau 'critical'
+    	const container = document.getElementById('toast-container');
+    	const toast = document.createElement('div');
+    	toast.className = `toast ${severity.toLowerCase()}`; // Adaugă clasa 'warning' sau 'critical'
     
-    toast.innerHTML = `
-        <span>${message}</span>
-        <button class="toast-close" onclick="closeToast(this, ${id})">×</button>
-    `;
+    	toast.innerHTML = `
+        	<span>${message}</span>
+        	<button class="toast-close" onclick="closeToast(this, ${id})">×</button>
+    	`;
     
-    container.appendChild(toast);
+    	container.appendChild(toast);
 
     // Auto-dispare după 10 secunde (10000 ms)
-    setTimeout(() => {
-        removeToastElement(toast);
-    }, 10000);
-}
+    	setTimeout(() => {
+        	removeToastElement(toast);
+    	}, 10000);
+	}
 
-function closeToast(button, id) {
-    const toast = button.parentElement;
-    removeToastElement(toast);
-}
+	function closeToast(button, id) {
+    	const toast = button.parentElement;
+    	removeToastElement(toast);
+	}
 
-function removeToastElement(toast) {
-    toast.style.opacity = '0';
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 500); // Așteaptă tranziția de fade-out din CSS
-}
+	function removeToastElement(toast) {
+    	toast.style.opacity = '0';
+    	setTimeout(() => {
+        	if (toast.parentElement) {
+            	toast.remove();
+        	}
+    	}, 500); // Așteaptă tranziția de fade-out din CSS
+	}
 
 // Actualizează funcția ta checkNotifications din script:
-function checkNotifications() {
-    fetch('/get-notifications')
-        .then(response => response.json())
-        .then(data => {
-            const bellImg = document.getElementById('notification-bell');
-            const listContainer = document.getElementById('notification-list');
-            
-            if (data.length > 0) {
-                bellImg.src = bellActive;
-                listContainer.innerHTML = '';
+	function checkNotifications() {
+    	fetch('/get-notifications')
+		.then(response => {
+			console.log(response);
+			return response.json();
+		})
+        	.then(data => {
+            	const bellImg = document.getElementById('notification-bell');
+            	const listContainer = document.getElementById('notification-list');
+            	if (data.length > 0) {
+                	bellImg.src = bellActive;
+                	listContainer.innerHTML = '';
                 
-                data.forEach(item => {
+                	data.forEach(item => {
                     // 1. Injectăm în meniul dropdown al clopoțelului
-                    listContainer.innerHTML += `<div class="notification-item">${item.message}</div>`;
+                    	listContainer.innerHTML += `<div class="notification-item">${item.message}</div>`;
                     
                     // 2. Declanșăm popup-ul de 10 secunde pe ecran
-                    showToast(item.id, item.message, item.severity || 'warning');
-                });
-            } else {
-                if (!document.getElementById('notification-dropdown').classList.contains('show')) {
-                    bellImg.src = bellNormal;
-                }
-                listContainer.innerHTML = '<div class="no-notifications">Nu ai notificări noi</div>';
-            }
-        });
+                    	showToast(item.id, item.message, item.severity || 'warning');
+                	});
+            	} else {
+                	if (!document.getElementById('notification-dropdown').classList.contains('show')) {
+                    	bellImg.src = bellNormal;
+                	}
+                	listContainer.innerHTML = '<div class="no-notifications">Nu ai notificări noi</div>';
+            	}
+        	});
 	}
+
 	function toggleNotifications() {
-    const dropdown = document.getElementById('notification-dropdown');
-    const bellImg = document.getElementById('notification-bell');
+    	const dropdown = document.getElementById('notification-dropdown');
+    	const bellImg = document.getElementById('notification-bell');
     
     // 1. Deschide sau închide vizual meniul dropdown (adaugă/șterge clasa 'show')
-    dropdown.classList.toggle('show');
+    	dropdown.classList.toggle('show');
     
     // 2. Dacă utilizatorul a deschis meniul, înseamnă că citește alarmele active
-    if (dropdown.classList.contains('show')) {
+    	if (dropdown.classList.contains('show')) {
         // Schimbăm instant iconița înapoi la cea normală (galbenă/albă)
-        if (typeof bellNormal !== 'undefined') {
-            bellImg.src = bellNormal;
-        }
+        	if (typeof bellNormal !== 'undefined') {
+            	bellImg.src = bellNormal;
+        	}
         
         // 3. Trimitem semnalul către serverul Flask să le marcheze ca citite (ACKNOWLEDGED)
-        fetch('/read-notifications', { method: 'POST' })
+        	fetch('/read-notifications', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 console.log("Alarmele active au fost luate la cunoștință:", data);
             })
             .catch(err => console.error("Eroare la trimiterea confirmării:", err));
-    }
-}
+    	}
+	}
+
+	setInterval(checkNotifications, 5000);
+    checkNotifications();
 	
 	function updateHistory() {
 		const start_date = document.querySelector('input[name="start_date"]').value;
