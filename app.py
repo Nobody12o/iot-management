@@ -187,16 +187,18 @@ def check_for_anomalies(valoare_temperatura):
         severitate_curenta = 'warning'
         mesaj_alarma = f"Atenție (Warning): Temperatură neobișnuită de {valoare_temperatura}°C!"
 
+    db.ping(reconnect=True)
     cursor = db.cursor()
     try:
-        # 1. Verificăm dacă există o alarmă activă în acest moment
-        cursor.execute("SELECT idALARM, severity FROM ALARMS WHERE status = 'ACTIVE' LIMIT 1")
-        alarma_activa = cursor.fetchone() # returnează (idALARM, severity) sau None
+        # 1. Verificăm dacă există o alarmă deschisă în acest moment (ACTIVE sau ACKNOWLEDGED)
+        # Selectăm idALARM, severity ȘI status ca să le avem pe toate trei în tuplu (evită index out of range)
+        cursor.execute("SELECT idALARM, severity, status FROM ALARMS WHERE status IN ('ACTIVE', 'ACKNOWLEDGED') ORDER BY idALARM DESC LIMIT 1")
+        alarma_activa = cursor.fetchone() # Returnează (idALARM, severity, status) sau None
         
         if severitate_curenta:
             # Dacă avem o stare de alertă acum...
             if not alarma_activa:
-                # Cazul A: Nu avem nicio alarmă activă -> Creăm una nouă
+                # Cazul A: Creăm o alarmă nouă
                 query_insert = """
                     INSERT INTO ALARMS (idSENSORS, severity, message, alarm_value, started_at, status)
                     VALUES (1, %s, %s, %s, NOW(), 'ACTIVE')
@@ -206,21 +208,23 @@ def check_for_anomalies(valoare_temperatura):
                 print("Alarma nouă a fost salvată în baza de date.")
                 
             elif alarma_activa[1] != severitate_curenta:
-                # Cazul B: Avem o alarmă activă, dar severitatea s-a schimbat (ex: de la Warning la Critical)
-                # O închidem pe cea veche ca RESOLVED...
-                cursor.execute("UPDATE ALARMS SET status = 'RESOLVED', ended_at = NOW() WHERE idALARM = %s", (alarma_activa[0],))
-                # ...și deschidem una nouă cu noua severitate
+                # Cazul B: S-a schimbat severitatea
+                # O trecem pe cea veche în ACKNOWLEDGED ca să nu dispară din clopoțel până nu îi dai manual "X"
+                cursor.execute("UPDATE ALARMS SET status = 'ACKNOWLEDGED', ended_at = NOW() WHERE idALARM = %s", (alarma_activa[0],))
+                
+                # Deschidem una nouă cu noua severitate
                 query_insert = """
-                    INSERT INTO ALARMS (severity, message, alarm_value, started_at, status)
-                    VALUES (%s, %s, %s, NOW(), 'ACTIVE')
+                    INSERT INTO ALARMS (idSENSORS, severity, message, alarm_value, started_at, status)
+                    VALUES (1, %s, %s, %s, NOW(), 'ACTIVE')
                 """
                 cursor.execute(query_insert, (severitate_curenta, mesaj_alarma, valoare_temperatura))
                 db.commit()
                 
         else:
-            # Dacă temperatura a revenit la normal (între 17 și 28 grade)...
-            if alarma_activa:
-                # Cazul C: Există o alarmă activă în baza de date -> O remediem automat (RESOLVED)
+            # Cazul C: Dacă temperatura a revenit la normal
+            # Verificăm direct starea [2] din primul query, fiindcă acum am selectat-o corect
+            if alarma_activa and alarma_activa[2] == 'ACTIVE':
+                # O remediem automat (RESOLVED) doar dacă era neatinsă (starea ACTIVE)
                 query_resolve = """
                     UPDATE ALARMS 
                     SET status = 'RESOLVED', ended_at = NOW() 
@@ -237,42 +241,30 @@ def check_for_anomalies(valoare_temperatura):
 
 @app.route('/get-notifications')
 def get_notifications():
+    db.ping(reconnect=True)
     cursor = db.cursor()
     # MODIFICARE: Am adăugat coloana 'severity' în SELECT
-    query = "SELECT idALARM, message, severity FROM ALARMS WHERE status = 'ACTIVE' ORDER BY idALARM DESC"
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    cursor.close()
+    try:
+        query = "SELECT idALARM, message, severity FROM ALARMS WHERE status IN ('ACTIVE', 'ACKNOWLEDGED') ORDER BY idALARM DESC"
+        cursor.execute(query)
+        rows = cursor.fetchall()
     
     # MODIFICARE: Adăugăm row[2] sub cheia "severity" în dicționar
-    notifications = [
-        {
-            "id": row[0], 
-            "message": row[1], 
-            "severity": row[2]
-        } for row in rows
-    ]
-    return jsonify(notifications)
-
-@app.route('/read-notifications', methods=['POST'])
-def read_notifications():
-    cursor = db.cursor()
-    try:
-        # Schimbăm statusul din ACTIVE în ACKNOWLEDGED și completăm cine și când a dat click
-        query = """
-            UPDATE ALARMS 
-            SET status = 'ACKNOWLEDGED', 
-                acknowledged_by = 'Paun', 
-                acknowledged_at = NOW() 
-            WHERE status = 'ACTIVE'
-        """
-        cursor.execute(query)
-        db.commit()
+        notifications = [
+            {
+                "id": row[0], 
+                "message": row[1], 
+                "severity": row[2]
+            } for row in rows
+        ]
+        return jsonify(notifications)
+    
     except Exception as e:
-        print(f"Eroare la confirmare alarme: {e}")
+        print(f"Eroare la get-notifications: {e}")
+        return jsonify([])
+
     finally:
         cursor.close()
-    return jsonify({"status": "success"})
 
 @app.route('/history-data')
 def history_data():
@@ -300,6 +292,46 @@ def history_data():
         cursor.close()
     
     return jsonify({"labels": stamps, "temperatures": temperatures})
+
+@app.route('/resolve-alarm/<int:alarm_id>', methods=['POST'])
+def resolve_alarm(alarm_id):
+    cursor = db.cursor()
+    try:
+        # MODIFICARE: Setăm statusul ca RESOLVED și salvăm timpul rezolvării (ended_at)
+        query = """
+            UPDATE ALARMS 
+            SET status = 'RESOLVED', 
+                ended_at = NOW() 
+            WHERE idALARM = %s
+        """
+        cursor.execute(query, (alarm_id,))
+        db.commit()
+    except Exception as e:
+        print(f"Eroare la rezolvarea alarmei {alarm_id}: {e}")
+    finally:
+        cursor.close()
+    return jsonify({"status": "success"})
+
+@app.route('/read-notifications', methods=['POST'])
+def read_notifications():
+    db.ping(reconnect=True)
+    cursor = db.cursor()
+    try:
+        # Schimbăm statusul din ACTIVE în ACKNOWLEDGED și completăm cine și când a dat click
+        query = """
+            UPDATE ALARMS 
+            SET status = 'ACKNOWLEDGED', 
+                acknowledged_by = 'Paun', 
+                acknowledged_at = NOW() 
+            WHERE status = 'ACTIVE'
+        """
+        cursor.execute(query)
+        db.commit()
+    except Exception as e:
+        print(f"Eroare la confirmare alarme: {e}")
+    finally:
+        cursor.close()
+    return jsonify({"status": "success"})
 
 if __name__ == '__main__':
     app.run()

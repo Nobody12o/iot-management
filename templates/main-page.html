@@ -189,10 +189,31 @@ body::before {
     color: #ffffff;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     line-height: 1.4;
+
+	display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
 }
 
 .notification-item:last-child {
     border-bottom: none; /* Scoatem dunga de jos de la ultimul element */
+}
+
+.close-alarm-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.close-alarm-btn:hover {
+    color: #fc375d; /* Roșu aprins la hover */
+    background: rgba(252, 55, 93, 0.1);
 }
 
 /* 5. Stilul afișat când nu există nicio alarmă activă */
@@ -444,41 +465,41 @@ body::before {
 }
 
 .scrollbar-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-top: 14px;
-	}
-	.scrollbar-row button {
-		background: rgba(255,255,255,0.08);
-		border: none;
-		color: #b8c2ff;
-		width: 30px;
-		height: 30px;
-		border-radius: 8px;
-		cursor: pointer;
-		font-size: 14px;
-	}
-	.scrollbar-row button:hover {
-		background: rgba(255,255,255,0.16);
-	}
-	input[type="range"] {
-		flex: 1;
-		-webkit-appearance: none;
-		height: 6px;
-		border-radius: 3px;
-		background: rgba(255,255,255,0.1);
-		outline: none;
-	}
-	input[type="range"]::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		background: linear-gradient(180deg, #ff7400, #bd2cff);
-		cursor: pointer;
-		border: 2px solid #fff;
-	}
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 14px;
+}
+.scrollbar-row button {
+	background: rgba(255,255,255,0.08);
+	border: none;
+	color: #b8c2ff;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 14px;
+}
+.scrollbar-row button:hover {
+	background: rgba(255,255,255,0.16);
+}
+input[type="range"] {
+	flex: 1;
+	-webkit-appearance: none;
+	height: 6px;
+	border-radius: 3px;
+	background: rgba(255,255,255,0.1);
+	outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: linear-gradient(180deg, #ff7400, #bd2cff);
+	cursor: pointer;
+	border: 2px solid #fff;
+}
 
 @media (max-width: 960px) {
 	  .overview-container {
@@ -1000,7 +1021,12 @@ const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
                 
                 	data.forEach(item => {
                     // 1. Injectăm în meniul dropdown al clopoțelului
-                    	listContainer.innerHTML += `<div class="notification-item">${item.message}</div>`;
+                    	listContainer.innerHTML += `
+							<div class="notification-item" id="alarm-item-${item.id}">
+                            	<span>${item.message}</span>
+                            	<button class="close-alarm-btn" onclick="resolveAlarm(event, ${item.id})">×</button>
+                        	</div>
+                    	`;
                     
                     // 2. Declanșăm popup-ul de 10 secunde pe ecran
                     	showToast(item.id, item.message, item.severity || 'warning');
@@ -1009,7 +1035,7 @@ const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
                 	if (!document.getElementById('notification-dropdown').classList.contains('show')) {
                     	bellImg.src = bellNormal;
                 	}
-                	listContainer.innerHTML = '<div class="no-notifications">Nu ai notificări noi</div>';
+                	listContainer.innerHTML = '<div class="no-notifications">You don\'t have any notification</div>';
             	}
         	});
 	}
@@ -1036,6 +1062,28 @@ const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
             })
             .catch(err => console.error("Eroare la trimiterea confirmării:", err));
     	}
+	}
+
+	function resolveAlarm(event, alarmId) {
+    // Prevenim închiderea automată a dropdown-ului la click pe "X"
+    	event.stopPropagation();
+
+    // Trimitem cererea de rezolvare la server
+    	fetch(`/resolve-alarm/${alarmId}`, { method: 'POST' })
+        	.then(response => response.json())
+        	.then(data => {
+            	if (data.status === 'success') {
+                // Eliminăm vizual elementul din listă cu un efect discret
+                	const alarmElement = document.getElementById(`alarm-item-${alarmId}`);
+                	if (alarmElement) {
+                    	alarmElement.remove();
+                	}
+                
+                // Optional: Re-verificăm notificările imediat ca să actualizăm iconița clopoțelului
+                	checkNotifications();
+            	}
+        	})
+        	.catch(err => console.error("Error resolving alarm:", err));
 	}
 
 	setInterval(checkNotifications, 5000);
