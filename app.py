@@ -3,8 +3,10 @@ import requests
 from flask import Flask, session, redirect, render_template, jsonify, request
 import pymysql
 pymysql.install_as_MySQLdb()
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
-DEFAULT_INTERVAL = 15
+DEFAULT_INTERVAL = 60
 count = DEFAULT_INTERVAL
 
 url = "http://10.10.251.18/json/all.json"
@@ -13,6 +15,8 @@ app = Flask(__name__)
 app.secret_key = 'ana_are_mere_si_bogdan_pere'
 
 db = pymysql.connect(host="10.10.20.59", user="user1", password="1234", database="db1")
+
+GOOGLE_CLIENT_ID = "322017813303-eham86959grnjij3gp5jr4g3jqu2stfl.apps.googleusercontent.com"
 
 @app.route('/')
 def open_page():
@@ -29,7 +33,7 @@ def login_page():
         cursor = db.cursor()
 
         try:
-            query = "SELECT email, username FROM USERS WHERE email = %s OR username = %s"
+            query = "SELECT idUSER, email, username FROM USERS WHERE email = %s OR username = %s"
             cursor.execute(query, (user, user))
             response = cursor.fetchone()
             if response:
@@ -39,6 +43,7 @@ def login_page():
                 if password_hash[0] == password:
                     session['is_authenticated'] = True
                     session['user'] = user
+                    session['user_id'] = response[0]
                     return redirect('/main-page')
                 else:
                     return render_template('login.html', error='Invalid username or password')
@@ -53,6 +58,63 @@ def login_page():
             cursor.close()
     
     return render_template('login.html')
+
+@app.route('/login/google/authorized', methods=['POST'])
+def google_authorized():
+    data = request.get_json()
+    token = data.get('credential')
+
+    if not token:
+        return jsonify({"success": False, "message": "Token inexistent"}), 400
+
+    try:
+        # Verify tokens from Google services
+        id_info = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+
+        # Extract Google profile info
+        email = id_info.get('email')
+        full_name = id_info.get('name')
+        google_id = id_info.get('sub') 
+
+        # check email in database
+        cursor = db.cursor()
+        query = "SELECT idUSER, username FROM USERS WHERE email = %s"
+        cursor.execute(query, (email,))
+        user_row = cursor.fetchone()
+
+        if user_row:
+            # if user exists -> autologin
+            user_id = user_row[0]
+            username = user_row[1]
+        else:
+            # new user -> save user's info in database
+            base_username = email.split('@')[0]
+            username = base_username
+
+            query_insert = """
+                INSERT INTO USERS (username, password_hash, full_name, email, created_at) 
+                VALUES (%s, 'GOOGLE_AUTH', %s, %s, NOW())
+            """
+            cursor.execute(query_insert, (username, full_name, email))
+            db.commit()
+            
+            user_id = cursor.lastrowid
+
+        cursor.close()
+
+        # Flask session info
+        session['is_authenticated'] = True
+        session['user'] = username
+        session['user_id'] = user_id
+
+        return jsonify({"success": True})
+
+    except ValueError:
+        # Token invalid or expired
+        return jsonify({"success": False, "message": "Token invalid"}), 400
+    except Exception as e:
+        print(f"Eroare la autentificarea Google: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/sign-up', methods=['GET', 'POST'])
 def sign_up_page():
@@ -245,7 +307,13 @@ def get_notifications():
     cursor = db.cursor()
     # MODIFICARE: Am adăugat coloana 'severity' în SELECT
     try:
-        query = "SELECT idALARM, message, severity FROM ALARMS WHERE status IN ('ACTIVE', 'ACKNOWLEDGED') ORDER BY idALARM DESC"
+        query = """
+            SELECT A.idALARM, A.message, A.severity, U.full_name 
+            FROM ALARMS A
+            LEFT JOIN USERS U ON A.idUSER = U.idUSER 
+            WHERE A.status IN ('ACTIVE', 'ACKNOWLEDGED') 
+            ORDER BY A.idALARM DESC
+        """
         cursor.execute(query)
         rows = cursor.fetchall()
     
@@ -254,7 +322,8 @@ def get_notifications():
             {
                 "id": row[0], 
                 "message": row[1], 
-                "severity": row[2]
+                "severity": row[2],
+                "name": row[3]
             } for row in rows
         ]
         return jsonify(notifications)
@@ -297,7 +366,7 @@ def history_data():
 def resolve_alarm(alarm_id):
     cursor = db.cursor()
     try:
-        # MODIFICARE: Setăm statusul ca RESOLVED și salvăm timpul rezolvării (ended_at)
+        # Setăm statusul ca RESOLVED și salvăm timpul rezolvării (ended_at)
         query = """
             UPDATE ALARMS 
             SET status = 'RESOLVED', 
@@ -314,18 +383,28 @@ def resolve_alarm(alarm_id):
 
 @app.route('/read-notifications', methods=['POST'])
 def read_notifications():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+
     db.ping(reconnect=True)
     cursor = db.cursor()
     try:
+        cursor.execute("SELECT full_name FROM USERS WHERE idUSER = %s", (user_id,))
+        user_row = cursor.fetchone()
+        
+        # Dacă găsim numele, îl folosim; dacă nu, punem un fallback de siguranță
+        full_name = user_row[0] if user_row else "Unknown User"
         # Schimbăm statusul din ACTIVE în ACKNOWLEDGED și completăm cine și când a dat click
         query = """
             UPDATE ALARMS 
             SET status = 'ACKNOWLEDGED', 
-                acknowledged_by = 'Paun', 
+                idUSER = %s,
+                acknowledged_by = %s,
                 acknowledged_at = NOW() 
             WHERE status = 'ACTIVE'
         """
-        cursor.execute(query)
+        cursor.execute(query, (user_id, full_name))
         db.commit()
     except Exception as e:
         print(f"Eroare la confirmare alarme: {e}")

@@ -295,7 +295,7 @@ body::before {
 	background: linear-gradient(90deg, #274079, #26356c 25%, #262b62 50%, #272053 75%, #0b0d1b 100%);
 	color: #ffffff;
 	border-radius: 20px;
-	box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	width: min(1100px, 100%);
 	overflow: hidden;
 	display: grid;
@@ -313,7 +313,7 @@ body::before {
 	background: linear-gradient(90deg, #274079, #26356c 25%, #262b62 50%, #272053 75%, #0b0d1b 100%);
 	color: #ffffff;
 	border-radius: 20px;
-	box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 	width: min(1100px, 100%);
 	overflow: hidden;
 	display: none;
@@ -966,7 +966,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 	// Set global pentru a urmări ce alarme am afișat deja ca pop-up
 	const bellNormal = "{{ url_for('static', filename='bell.png') }}";
-const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
+	const bellActive = "{{ url_for('static', filename='bell-active.png') }}";
 	const activeToastIds = new Set();
 
 	function showToast(id, message, severity) {

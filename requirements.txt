@@ -12,3 +12,4 @@ requests==2.34.2
 urllib3==2.7.0
 Werkzeug==3.1.8
 gunicorn==23.0.0
+google-auth==2.56.0

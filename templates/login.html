@@ -1,241 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Inter, Arial, sans-serif;
-    }
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Login</title>
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+			font-family: Inter, Arial, sans-serif;
+		}
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top left, #fafcfe 0%, #f9f7f7 25%, #f7ebee 50%, #ebeaf2 75%, #b5e5f4 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px;
-    }
+		body {
+			min-height: 100vh;
+			background: radial-gradient(circle at top left, #fafcfe 0%, #f9f7f7 25%, #f7ebee 50%, #ebeaf2 75%, #b5e5f4 100%);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 32px;
+		}
 
-    .container {
-      width: min(1100px, 100%);
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 32px;
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      min-height: 720px;
-    }
+		.container {
+			width: min(1100px, 100%);
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 32px;
+			overflow: hidden;
+			box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+			display: grid;
+			grid-template-columns: 1.2fr 1fr;
+			min-height: 720px;
+		}
 
-    .hero {
-      background: linear-gradient(180deg, #f53903 0%, #f55608 25%, #f58211 50%, #f5ad19 75%, #f5cc1f 100%);
-      padding: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+		.hero {
+			background: linear-gradient(180deg, #f53903 0%, #f55608 25%, #f58211 50%, #f5ad19 75%, #f5cc1f 100%);
+			padding: 48px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
 
-    .hero img {
-      max-width: 100%;
-      border-radius: 32px;
-      box-shadow: 0 20px 50px rgba(85, 0, 135, 0.22);
-    }
+		.hero img {
+			max-width: 100%;
+			border-radius: 32px;
+			box-shadow: 0 20px 50px rgba(85, 0, 135, 0.22);
+		}
 
-    .login-panel {
-      padding: 56px 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-    }
+		.login-panel {
+			padding: 56px 48px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			position: relative;
+		}
 
-    .top-link {
-      position: absolute;
-      top: 28px;
-      right: 48px;
-      font-size: 0.9rem;
-      color: #6b6b6b;
-    }
+		.top-link {
+			position: absolute;
+			top: 28px;
+			right: 48px;
+			font-size: 0.9rem;
+			color: #6b6b6b;
+		}
 
-    .top-link a {
-      color: #c28324;
-      text-decoration: none;
-      font-weight: 700;
-      margin-left: 8px;
-    }
+		.top-link a {
+			color: #c28324;
+			text-decoration: none;
+			font-weight: 700;
+			margin-left: 8px;
+		}
 
-    .top-link a:hover {
-      text-decoration: underline;
-      color: #636363;
-    }
+		.top-link a:hover {
+			text-decoration: underline;
+			color: #636363;
+		}
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-      color: #3a2c1a;
-    }
+		h1 {
+			font-size: 2.5rem;
+			margin-bottom: 12px;
+			color: #3a2c1a;
+		}
 
-    p.subtitle {
-      margin-bottom: 40px;
-      color: #6f6f8d;
-      line-height: 1.6;
-    }
+		p.subtitle {
+			margin-bottom: 40px;
+			color: #6f6f8d;
+			line-height: 1.6;
+		}
 
-    form {
-      display: grid;
-      gap: 20px;
-    }
+		form {
+			display: grid;
+			gap: 20px;
+		}
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+		.input-group {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
 
-    .input-group label {
-      font-size: 0.95rem;
-      color: #5c5272;
-    }
+		.input-group label {
+			font-size: 0.95rem;
+			color: #5c5272;
+		}
 
-    .input-group input {
-      padding: 16px 18px;
-      border: 1px solid #e1dcee;
-      border-radius: 16px;
-      font-size: 1rem;
-      background: #faf8ff;
-      color: #2a2141;
-    }
+		.input-group input {
+			padding: 16px 18px;
+			border: 1px solid #e1dcee;
+			border-radius: 16px;
+			font-size: 1rem;
+			background: #faf8ff;
+			color: #2a2141;
+		}
 
-    .input-group input:focus {
-      outline: none;
-      border-color: #9770ff;
-      box-shadow: 0 0 0 4px rgba(151, 112, 255, 0.12);
-    }
+		.input-group input:focus {
+			outline: none;
+			border-color: #9770ff;
+			box-shadow: 0 0 0 4px rgba(151, 112, 255, 0.12);
+		}
 
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 4px;
-    }
+		.actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top: 4px;
+		}
 
-    .actions a {
-      color: #c28324;
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: bold;
-    }
+		.actions a {
+			color: #c28324;
+			text-decoration: none;
+			font-size: 0.95rem;
+			font-weight: bold;
+		}
 
-    .actions a:hover {
-      text-decoration: underline;
-      color: #636363;
-    }
+		.actions a:hover {
+			text-decoration: underline;
+			color: #636363;
+		}
 
-    .submit-btn {
-      border: none;
-      border-radius: 16px;
-      padding: 16px;
-      background: #f09013;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s ease, background 0.2s ease;
-    }
+		.submit-btn {
+			border: none;
+			border-radius: 16px;
+			padding: 16px;
+			background: #f09013;
+			color: white;
+			font-weight: 700;
+			cursor: pointer;
+			transition: transform 0.2s ease, background 0.2s ease;
+		}
 
-    .submit-btn:hover {
-      transform: translateY(-1px);
-      background: #636363;
-      color: #ee9210;
-    }
+		.submit-btn:hover {
+			transform: translateY(-1px);
+			background: #636363;
+			color: #ee9210;
+		}
 
-    .social-connect {
-      margin-top: 28px;
-      text-align: center;
-      color: #6f6f8d
-    }
+		.social-connect {
+			margin-top: 28px;
+			text-align: center;
+			color: #6f6f8d
+		}
 
-    .social-icons {
-      margin-top: 18px;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
+		.social-icons {
+			margin-top: 18px;
+			display: flex;
+			justify-content: center;
+			gap: 16px;
+		}
 
-    .social-button {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      border: 1px solid #ece7f6;
-      box-shadow: 0 10px 25px rgba(128, 92, 201, 0.12);
-      cursor: pointer;
-    }
+		.social-button {
+			width: 60px;
+			height: 60px;
+			border-radius: 16px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: white;
+			border: 1px solid #ece7f6;
+			box-shadow: 0 10px 25px rgba(128, 92, 201, 0.12);
+			cursor: pointer;
+		}
 
-    .social-button svg {
-      width: 24px;
-      height: 24px;
-    }
+		.social-button svg {
+			width: 24px;
+			height: 24px;
+		}
 
-    @media (max-width: 960px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-      .top-link {
-        position: static;
-        margin-bottom: 24px;
-      }
-      .hero {
-        min-height: 320px;
-      }
-    }
-  </style>
+		@media (max-width: 960px) {
+			.container {
+				grid-template-columns: 1fr;
+			}
+			.top-link {
+				position: static;
+				margin-bottom: 24px;
+			}
+			.hero {
+				min-height: 320px;
+			}
+		}
+	</style>
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <main class="container">
-    <section class="hero">
-      <img src="https://static.vecteezy.com/system/resources/previews/044/252/934/non_2x/winter-thermometer-temperature-celsius-icon-drawing-doodle-vector.jpg" alt="Login illustration" />
-    </section>
-    <section class="login-panel">
-      <div class="top-link">
-        Don't have an account? <a onclick="window.location.href='/sign-up'">Create one now</a>
-      </div>
-      <h1>Hello Again!</h1>
-      <p class="subtitle">Welcome back you've been missed!</p>
-      <form action="/login" method="POST">
-        <div class="input-group">
-          <label for="user">Enter email or username</label>
-          <input type="text" id="user" name="user" placeholder="Enter email or username" required />
-        </div>
-        <div class="input-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="Password" required />
-        </div>
-        <div class="actions">
-          <span></span>
-          <a href="#" onclick="alert('Unavailble feature')">Recovery Password</a>
-        </div>
-        <button type="submit" class="submit-btn">Sign In</button>
-      </form>
-      <div class="social-connect">Or continue with</div>
-      <div class="social-icons">
-        <button class="social-button" type="button" aria-label="Sign in with Google">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="https://crystalpng.com/wp-content/uploads/2025/05/google-logo.png">
-            <path d="M21.35 11.1H12v2.8h5.35c-.23 1.3-.95 2.4-2.03 3.14v2.6h3.28c1.92-1.76 3.03-4.38 3.03-7.54 0-.5-.05-.98-.14-1.44z" fill="#4285F4"/>
-            <path d="M12 22c2.7 0 4.97-.9 6.63-2.44l-3.28-2.6c-.91.62-2.08.98-3.35.98-2.58 0-4.77-1.74-5.56-4.08H2.99v2.56C4.63 19.74 8.03 22 12 22z" fill="#34A853"/>
-            <path d="M6.44 13.86A6.999 6.999 0 0112 9.5c1.03 0 1.98.27 2.8.74l2.1-2.1C15.08 6.98 13.62 6.5 12 6.5 8.03 6.5 4.63 8.76 2.99 11.97l3.45 1.89z" fill="#FBBC05"/>
-            <path d="M12 5.5c1.44 0 2.75.5 3.79 1.49l2.84-2.84C16.97 2.63 14.6 1.5 12 1.5 7.11 1.5 2.9 4.44 1.44 8.97l3.45 1.89C5.23 7.24 8.42 5.5 12 5.5z" fill="#EA4335"/>
-          </svg>
-        </button>
-      </div>
-    </section>
-  </main>
+	<main class="container">
+		<section class="hero">
+			<img src="https://static.vecteezy.com/system/resources/previews/044/252/934/non_2x/winter-thermometer-temperature-celsius-icon-drawing-doodle-vector.jpg" alt="Login illustration" />
+		</section>
+		<section class="login-panel">
+			<div class="top-link">
+				Don't have an account? <a onclick="window.location.href='/sign-up'">Create one now</a>
+			</div>
+			<h1>Hello Again!</h1>
+			<p class="subtitle">Welcome back you've been missed!</p>
+			<form action="/login" method="POST">
+				<div class="input-group">
+					<label for="user">Enter email or username</label>
+					<input type="text" id="user" name="user" placeholder="Enter email or username" required />
+				</div>
+				<div class="input-group">
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" placeholder="Password" required />
+				</div>
+				<div class="actions">
+					<span></span>
+					<a href="#" onclick="alert('Unavailble feature')">Recovery Password</a>
+				</div>
+				<button type="submit" class="submit-btn">Sign In</button>
+			</form>
+			<div class="social-connect">Or continue with</div>
+			<div class="social-icons">
+				<button id="google-btn" class="social-button" type="button" aria-label="Sign in with Google">
+					<img style="height: 60%; width: 60%; object-fit: cover;" src="https://crystalpng.com/wp-content/uploads/2025/05/google-logo.png" alt="Google">
+				</button>
+			</div>
+		</section>
+	</main>
 </body>
+<script>
+	const GOOGLE_CLIENT_ID = "322017813303-eham86959grnjij3gp5jr4g3jqu2stfl.apps.googleusercontent.com";
+
+	window.onload = function () {
+  		google.accounts.id.initialize({
+			client_id: GOOGLE_CLIENT_ID,
+			callback: handleCredentialResponse
+  		});
+
+  		// Event Listener for pop-up window
+  		document.getElementById('google-btn').addEventListener('click', function() {
+			google.accounts.id.prompt(); // Shows Google account pop-up
+  		});
+	};
+
+	// After user selects it's account
+	function handleCredentialResponse(response) {
+  		// Sending secured token (JWT) to Flask for loging
+  		fetch('/login/google/authorized', {
+			method: 'POST',
+			headers: {
+	  			'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ credential: response.credential })
+  		})
+  		.then(res => res.json())
+  		.then(data => {
+			if (data.success) {
+	  			// Authentification succeded -> redirect to main-page
+	  			window.location.href = '/main-page';
+			} else {
+	  			alert("Autentificarea cu Google a eșuat: " + data.message);
+			}
+  		})
+  		.catch(err => console.error("Eroare la trimiterea token-ului Google:", err));
+	}
+
+	function updateTemperature() {
+        fetch('/sensor-data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('temperature').innerHTML = data.temperature + '°C';
+            });
+    }
+    updateTemperature();   
+    setInterval(updateTemperature, 1000);
+</script>
 </html>
